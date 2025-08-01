@@ -7,14 +7,14 @@ const Toolbar = () => {
 
   return (
     <div className="gap-4 fixed bottom-4 left-4 flex justify-between  border p-4 rounded-md">
-      <Button
+      {/* <Button
         onClick={() => {
           console.log("Add");
           //   createMovable();
         }}
       >
         Add
-      </Button>
+      </Button> */}
       <Button
         onClick={() => {
           setPanMode((prev) => !prev);

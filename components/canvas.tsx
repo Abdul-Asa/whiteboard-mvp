@@ -33,25 +33,27 @@ const Canvas = ({ children }: { children: React.ReactNode }) => {
     updateCameraWheel(event);
     updateCursorPos(event);
   };
-
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     const isBubbled = event.target !== event.currentTarget;
-    console.log("isBubbled", isBubbled);
+
     updateCursorPos(event);
     updateCursorState(true);
-    setSelected(null);
-    if (!panMode) startDragArea();
-    if (!panMode) return;
-    setIsDragging(true);
-    updateOffset(event);
+    if (!isBubbled) setSelected(null);
+    if (panMode) {
+      setIsDragging(true);
+      updateOffset(event);
+    } else {
+      if (!isBubbled) startDragArea();
+    }
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     updateCursorPos(event);
-    if (!panMode) updateDragArea();
-    if (!panMode) return;
-    if (!isDragging) return;
-    updateCameraPointer(event);
+    if (panMode && isDragging) {
+      updateCameraPointer(event);
+    } else if (!panMode) {
+      updateDragArea();
+    }
   };
 
   const onPointerUp = () => {

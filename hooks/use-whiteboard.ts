@@ -1,13 +1,20 @@
 import { CANVAS_SIZE } from "@/lib/constants";
-import { cameraAtom, canvasAtom, mouseAtom } from "@/lib/jotai-store";
+import {
+  cameraAtom,
+  canvasAtom,
+  mouseAtom,
+  selectedAtom,
+} from "@/lib/jotai-store";
 import { useAtom } from "jotai";
 import { useViewportSize } from "./use-viewport-size";
 import { useState } from "react";
 import { color } from "framer-motion";
+import { set } from "lodash";
 
 export const useWhiteboard = () => {
   const [cursor, setCursor] = useAtom(mouseAtom);
   const [movables, setMovables] = useAtom(canvasAtom);
+  const [selected, setSelected] = useAtom(selectedAtom);
   const [, setCamera] = useAtom(cameraAtom);
   const dimensions = useViewportSize();
   const viewWidth = dimensions.width;
@@ -68,7 +75,7 @@ export const useWhiteboard = () => {
     setDragStart({ x: cursor.x, y: cursor.y });
   };
   const updateDragArea = () => {
-    if (cursor.down) {
+    if (cursor.down && dragStart.x && dragStart.y) {
       setCursor((prev) => ({
         ...prev,
         dragArea: {
@@ -81,7 +88,11 @@ export const useWhiteboard = () => {
     }
   };
   const endDragArea = () => {
-    if (cursor.down) {
+    if (
+      cursor.down &&
+      cursor.dragArea.width > 10 &&
+      cursor.dragArea.height > 10
+    ) {
       createMovable(
         cursor.dragArea.left,
         cursor.dragArea.top,
@@ -93,6 +104,7 @@ export const useWhiteboard = () => {
       ...prev,
       dragArea: { top: 0, left: 0, width: 0, height: 0 },
     }));
+    setDragStart({ x: 0, y: 0 });
   };
 
   const createMovable = (
@@ -109,6 +121,7 @@ export const useWhiteboard = () => {
       height,
       color: colors[Math.floor(Math.random() * colors.length)],
     };
+    setSelected(newMovable);
     setMovables((prev) => [...prev, newMovable]);
   };
 

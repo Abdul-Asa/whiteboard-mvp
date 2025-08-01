@@ -11,6 +11,7 @@ const Cursor = ({
 
   return (
     <motion.div
+      drag={false}
       className="pointer-events-none"
       style={{
         position: "absolute",

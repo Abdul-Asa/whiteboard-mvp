@@ -58,44 +58,74 @@ const SelectionArea = () => {
 const CanvasItems = () => {
   const [movables, setMovables] = useAtom(canvasAtom);
   const [selected, setSelected] = useAtom(selectedAtom);
-  const [ref] = useAtom(refAtom);
+  const [cursor] = useAtom(mouseAtom);
+  const ref = useAtomValue(refAtom);
+  const [resizing, setResizing] = useState(false);
+  const [resizePos, setResizePos] = useState({ x: 0, y: 0 });
 
-  // const updateMovables = (id: string, x: number, y: number) => {
-  //   setMovables((prev) =>
-  //     prev.map((movable) => {
-  //       if (movable.id === id) {
-  //         return { ...movable, x, y };
-  //       }
-  //       return movable;
-  //     })
-  //   );
-  // };
-  // const handleDrag = (e: any, info: PanInfo, movable: Movable) => {
-  //   const { id, x, y } = movable;
-  //   const newX = x + info.offset.x;
-  //   const newY = y + info.offset.y;
-  //   console.log("dragging", id);
-  //   updateMovables(id, x, y);
-  // };
+  const startResize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setResizing(true);
+    setResizePos({ x: e.clientX, y: e.clientY });
+  };
+
+  const doResize = (e: MouseEvent) => {
+    if (resizing && selected) {
+      const dx = e.clientX - resizePos.x;
+      const dy = e.clientY - resizePos.y;
+      setMovables((prev) =>
+        prev.map((m) =>
+          m.id === selected.id
+            ? { ...m, width: m.width + dx, height: m.height + dy }
+            : m
+        )
+      );
+      setResizePos({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const endResize = () => {
+    setResizing(false);
+  };
 
   return movables.map((movable) => {
     return (
       <motion.div
-        // drag
-        // dragMomentum={false}
-        // dragConstraints={ref}
         key={movable.id}
+        drag
+        dragMomentum={false}
+        dragConstraints={ref}
         style={{
           position: "absolute",
           width: movable.width,
           height: movable.height,
           background: movable.color,
-          left: movable.x,
-          top: movable.y,
+          x: movable.x,
+          y: movable.y,
+          zIndex: selected?.id === movable.id ? 10 : 1,
         }}
-        // onDrag={(e, info) => handleDrag(e, info, movable)}
         onPointerDown={(e) => {
           setSelected(movable);
+        }}
+        onPointerMove={(e) => {
+          if (cursor.down && selected?.id === movable.id) {
+            const offsetX =
+              e.clientX - e.currentTarget.getBoundingClientRect().left;
+            const offsetY =
+              e.clientY - e.currentTarget.getBoundingClientRect().top;
+            setMovables((prev) =>
+              prev.map((m) => {
+                if (m.id === movable.id) {
+                  return {
+                    ...m,
+                    x: cursor.x - offsetX,
+                    y: cursor.y - offsetY,
+                  };
+                }
+                return m;
+              })
+            );
+          }
         }}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -103,16 +133,16 @@ const CanvasItems = () => {
         }}
       >
         {selected?.id === movable.id && (
-          <div className="absolute border-2 border-yellow-200 -inset-1">
-            <div className="absolute w-3 h-3 bg-yellow-200 -top-1 -left-1"></div>
-            <div className="absolute w-3 h-3 bg-yellow-200 -top-1 -right-1"></div>
-            <div className="absolute w-3 h-3 bg-yellow-200 -bottom-1 -left-1"></div>
-            <div className="absolute w-3 h-3 bg-yellow-200 -bottom-1 -right-1"></div>
+          <div className="absolute border-2 border-yellow-200 -inset-0">
+            <div className="absolute w-3 h-3 bg-yellow-200 -top-1 -left-1 cursor-ne-e"></div>
+            <div className="absolute w-3 h-3 bg-yellow-200 -top-1 -right-1 cursor-ne-e"></div>
+            <div className="absolute w-3 h-3 bg-yellow-200 -bottom-1 -left-1 cursor-ne-e"></div>
+            <div className="absolute w-3 h-3 bg-yellow-200 -bottom-1 -right-1 cursor-ne-e"></div>
           </div>
         )}
-        <p>
+        <div className=" select-none w-full h-full flex justify-center items-center">
           {movable.x.toFixed(1)}, {movable.y.toFixed(1)}
-        </p>
+        </div>
       </motion.div>
     );
   });
